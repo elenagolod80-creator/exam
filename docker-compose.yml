@@ -1,0 +1,22 @@
+version: "3.8"
+
+services:
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: exam-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+      - "15674:15674"
+      - "1883:1883"
+      - "15675:15675"
+    environment:
+      RABBITMQ_DEFAULT_USER: app
+      RABBITMQ_DEFAULT_PASS: app
+    volumes:
+      - ./message.conf:/etc/rabbitmq/rabbitmq.conf:ro
+    command: >
+      bash -c "
+      rabbitmq-plugins enable --offline rabbitmq_management rabbitmq_stomp rabbitmq_web_stomp rabbitmq_mqtt rabbitmq_web_mqtt &&
+      rabbitmq-server
+      "

@@ -1,0 +1,12 @@
+{
+  "name": "event-driven-rabbitmq-lab",
+  "version": "1.0.0",
+  "description": "Laboratory work with RabbitMQ, WebSocket STOMP and browser clients",
+  "private": true,
+  "scripts": {
+    "start": "npx http-server ./src -p 8080 -c-1"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}

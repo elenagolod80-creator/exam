@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <title>Web Service 1</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f3f6fb;
+      padding: 30px;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: #ffffff;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.08);
+    }
+
+    h1 {
+      color: #1d4ed8;
+    }
+
+    #status {
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+
+    input {
+      width: 75%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+
+    button {
+      padding: 10px 15px;
+      border: none;
+      background: #1d4ed8;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #1e40af;
+    }
+
+    .message {
+      background: #eef2ff;
+      padding: 10px;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+
+    .sender {
+      font-weight: bold;
+      color: #1d4ed8;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Web Service 1</h1>
+
+    <p id="status">Статус: підключення...</p>
+
+    <input id="messageInput" type="text" placeholder="Введіть повідомлення..." />
+    <button onclick="sendMessage()">Надіслати</button>
+
+    <h3>Отримані повідомлення:</h3>
+    <div id="messages"></div>
+  </div>
+
+  <script>
+    const clientName = "Web Service 1";
+    const queueName = "/queue/lab.chat";
+
+    const stompClient = new StompJs.Client({
+      brokerURL: "ws://localhost:15674/ws",
+      connectHeaders: {
+        login: "app",
+        passcode: "app"
+      },
+      reconnectDelay: 3000,
+      debug: function (str) {
+        console.log(str);
+      }
+    });
+
+    stompClient.onConnect = function () {
+      document.getElementById("status").innerText = "Статус: підключено до RabbitMQ";
+
+      stompClient.subscribe(queueName, function (message) {
+        const data = JSON.parse(message.body);
+        showMessage(data.sender, data.text, data.time);
+      });
+    };
+
+    stompClient.onStompError = function (frame) {
+      document.getElementById("status").innerText = "Статус: помилка підключення";
+      console.error(frame);
+    };
+
+    stompClient.activate();
+
+    function sendMessage() {
+      const input = document.getElementById("messageInput");
+      const text = input.value.trim();
+
+      if (!text) return;
+
+      const payload = {
+        sender: clientName,
+        text: text,
+        time: new Date().toLocaleTimeString()
+      };
+
+      stompClient.publish({
+        destination: queueName,
+        body: JSON.stringify(payload)
+      });
+
+      input.value = "";
+    }
+
+    function showMessage(sender, text, time) {
+      const messages = document.getElementById("messages");
+
+      const block = document.createElement("div");
+      block.className = "message";
+      block.innerHTML = `
+        <div class="sender">${sender}</div>
+        <div>${text}</div>
+        <small>${time}</small>
+      `;
+
+      messages.prepend(block);
+    }
+  </script>
+</body>
+</html>
